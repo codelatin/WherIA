@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ comercio.nombre }} — WherIA{% endblock %}
+
+{% block extra_css %}
+<style>
+  .stars-filled { color: #f59e0b; }
+  .stars-empty  { color: #e5e7eb; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-6">
+
+  {# Botón volver #}
+  <a href="/busqueda/" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-600 mb-4">
+    ← Volver a búsqueda
+  </a>
+
+  {# Cabecera del comercio #}
+  <div class="bg-white border border-gray-200 rounded-2xl p-6 mb-4">
+    <div class="flex items-start justify-between gap-4">
+      <div class="flex items-start gap-4">
+        <div class="w-16 h-16 rounded-xl bg-emerald-50 flex items-center justify-center text-3xl flex-shrink-0">
+          {{ comercio.categoria.icono|default:"🏪" }}
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-xl font-bold text-gray-900">{{ comercio.nombre }}</h1>
+            {% if comercio.verificado %}
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+              ✓ Verificado
+            </span>
+            {% endif %}
+            {% if comercio.destacado %}
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+              Destacado
+            </span>
+            {% endif %}
+          </div>
+          <p class="text-sm text-gray-500 mt-0.5">{{ comercio.categoria.nombre }}</p>
+          <div class="flex items-center gap-2 mt-2">
+            <span class="stars-filled text-sm">★★★★★</span>
+            <span class="text-sm font-semibold text-gray-800">{{ comercio.rating_promedio }}</span>
+            <span class="text-sm text-gray-400">({{ comercio.total_resenas }} reseñas)</span>
+          </div>
+        </div>
+      </div>
+      {% if comercio.esta_abierto %}
+      <span class="text-xs font-medium px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 flex-shrink-0">
+        Abierto ahora
+      </span>
+      {% else %}
+      <span class="text-xs font-medium px-3 py-1 rounded-full bg-gray-100 text-gray-500 flex-shrink-0">
+        Sin horario
+      </span>
+      {% endif %}
+    </div>
+
+    {% if comercio.descripcion %}
+    <p class="text-sm text-gray-600 mt-4 leading-relaxed">{{ comercio.descripcion }}</p>
+    {% endif %}
+
+    {# Botones de contacto #}
+    <div class="flex gap-3 mt-5 flex-wrap">
+      {% if comercio.whatsapp %}
+      <a href="https://wa.me/57{{ comercio.whatsapp }}"
+         target="_blank"
+         class="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium">
+        WhatsApp
+      </a>
+      {% endif %}
+      {% if comercio.telefono %}
+      <a href="tel:{{ comercio.telefono }}"
+         class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium">
+        📞 {{ comercio.telefono }}
+      </a>
+      {% endif %}
+      {% if comercio.email %}
+      <a href="mailto:{{ comercio.email }}"
+         class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium">
+        ✉️ Email
+      </a>
+      {% endif %}
+      {% if comercio.sitio_web %}
+      <a href="{{ comercio.sitio_web }}"
+         target="_blank"
+         class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium">
+        🌐 Sitio web
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+    {# Información #}
+    <div class="bg-white border border-gray-200 rounded-2xl p-5">
+      <h2 class="text-sm font-semibold text-gray-900 mb-3">Información</h2>
+      <div class="space-y-2 text-sm text-gray-600">
+        {% if comercio.direccion %}
+        <div class="flex items-start gap-2">
+          <span class="flex-shrink-0">📍</span>
+          <span>{{ comercio.direccion }}, {{ comercio.ciudad }}</span>
+        </div>
+        {% endif %}
+        {% if comercio.horario_apertura and comercio.horario_cierre %}
+        <div class="flex items-center gap-2">
+          <span>🕐</span>
+          <span>{{ comercio.dias_atencion }} · {{ comercio.horario_apertura|time:"g:i A" }} – {{ comercio.horario_cierre|time:"g:i A" }}</span>
+        </div>
+        {% endif %}
+        {% if comercio.email %}
+        <div class="flex items-center gap-2">
+          <span>✉️</span>
+          <span>{{ comercio.email }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Mapa #}
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden" style="height: 200px;">
+      <div id="mapa-perfil" style="height: 100%; width: 100%;"></div>
+    </div>
+
+  </div>
+
+  {# Reseñas #}
+  <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
+    <h2 class="text-sm font-semibold text-gray-900 mb-4">
+      Reseñas
+      <span class="text-gray-400 font-normal">({{ comercio.total_resenas }})</span>
+    </h2>
+
+    {% for resena in resenas %}
+    <div class="border-b border-gray-100 pb-4 mb-4 last:border-0 last:mb-0 last:pb-0">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-sm font-medium text-gray-800">{{ resena.autor.username }}</span>
+        <span class="text-xs text-gray-400">{{ resena.creado_en|date:"d M Y" }}</span>
+      </div>
+      <div class="flex gap-0.5 mb-2">
+        {% for i in "12345" %}
+          {% if forloop.counter <= resena.calificacion %}
+          <span class="stars-filled text-sm">★</span>
+          {% else %}
+          <span class="stars-empty text-sm">★</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% if resena.comentario %}
+      <p class="text-sm text-gray-600">{{ resena.comentario }}</p>
+      {% endif %}
+    </div>
+    {% empty %}
+    <p class="text-sm text-gray-400">Este comercio aún no tiene reseñas.</p>
+    {% endfor %}
+  </div>
+
+   {# ← AQUÍ VA EL FORMULARIO DE RESEÑA #}
+  {% if user.is_authenticated %}
+    {% if ya_reseno %}
+    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-4">
+      <p class="text-sm text-emerald-700 font-medium">
+        ✓ Ya dejaste una reseña para este comercio. ¡Gracias!
+      </p>
+    </div>
+    {% else %}
+    <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
+      <h2 class="text-sm font-semibold text-gray-900 mb-4">Deja tu reseña</h2>
+      {% if messages %}
+      {% for message in messages %}
+      <div class="mb-3 px-4 py-3 rounded-lg text-sm
+                  {% if message.tags == 'error' %}bg-red-50 text-red-700
+                  {% else %}bg-emerald-50 text-emerald-700{% endif %}">
+        {{ message }}
+      </div>
+      {% endfor %}
+      {% endif %}
+      <form method="POST" action="/comercio/{{ comercio.slug }}/resena/" x-data="{ stars: 0, hover: 0 }">
+        {% csrf_token %}
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-gray-700 mb-2">Calificación</label>
+          <div class="flex gap-2">
+            {% for i in "12345" %}
+            <button type="button"
+                    @click="stars = {{ forloop.counter }}"
+                    @mouseover="hover = {{ forloop.counter }}"
+                    @mouseleave="hover = 0"
+                    class="text-3xl transition-transform hover:scale-110"
+                    :class="(hover || stars) >= {{ forloop.counter }} ? 'text-yellow-400' : 'text-gray-200'">
+              ★
+            </button>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="calificacion" :value="stars">
+          <p class="text-xs text-gray-400 mt-1" x-text="stars === 0 ? 'Selecciona una calificación' : stars + ' de 5 estrellas'"></p>
+        </div>
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-gray-700 mb-1">Comentario (opcional)</label>
+          <textarea name="comentario" rows="3"
+                    placeholder="Cuéntanos tu experiencia con este negocio..."
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                           focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+        </div>
+        <button type="submit"
+                :disabled="stars === 0"
+                :class="stars === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'"
+                class="px-5 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors">
+          Publicar reseña
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  {% else %}
+  <div class="bg-gray-50 border border-gray-200 rounded-2xl p-5 mb-4 text-center">
+    <p class="text-sm text-gray-500 mb-3">Inicia sesión para dejar una reseña</p>
+    <a href="/login/?next=/comercio/{{ comercio.slug }}/"
+       class="inline-block px-5 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700">
+      Iniciar sesión
+    </a>
+  </div>
+  {% endif %}
+
+
+  {# Comercios relacionados #}
+  {% if comercios_relacionados %}
+  <div>
+    <h2 class="text-sm font-semibold text-gray-700 mb-3">También en {{ comercio.categoria.nombre }}</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {% for rel in comercios_relacionados %}
+      <a href="/comercio/{{ rel.slug }}/"
+         class="bg-white border border-gray-200 rounded-xl p-3 hover:border-emerald-400 transition-colors">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-lg flex-shrink-0">
+            {{ rel.categoria.icono|default:"🏪" }}
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-900">{{ rel.nombre }}</p>
+            <p class="text-xs text-gray-400">⭐ {{ rel.rating_promedio }}</p>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if comercio.latitud and comercio.longitud %}
+<script>
+  const mapaPerfil = L.map('mapa-perfil', { zoomControl: false }).setView(
+    [{{ comercio.latitud }}, {{ comercio.longitud }}], 16
+  );
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(mapaPerfil);
+  L.marker([{{ comercio.latitud }}, {{ comercio.longitud }}])
+    .addTo(mapaPerfil)
+    .bindPopup('<b>{{ comercio.nombre|escapejs }}</b>')
+    .openPopup();
+</script>
+{% endif %}
+{% endblock %}

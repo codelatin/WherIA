@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Buscar comercios — WherIA{% endblock %}
+
+{% block extra_css %}
+<style>
+  .layout-busqueda {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    height: calc(100vh - 56px);
+  }
+  .lista-scroll {
+    overflow-y: auto;
+    background: #f9fafb;
+    border-right: 1px solid #f3f4f6;
+  }
+  #mapa {
+    height: 100%;
+    width: 100%;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# Barra de filtros #}
+<div class="flex gap-2 px-4 py-2 bg-white border-b border-gray-100 overflow-x-auto">
+  <a href="?q={{ query }}"
+     class="px-3 py-1 rounded-full text-xs font-medium border
+            {% if not categoria_slug %}bg-emerald-50 text-emerald-700 border-emerald-300
+            {% else %}bg-white text-gray-500 border-gray-200{% endif %}">
+    Todos
+  </a>
+  {% for cat in categorias %}
+  <a href="?q={{ query }}&categoria={{ cat.slug }}"
+     class="px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap
+            {% if categoria_slug == cat.slug %}bg-emerald-50 text-emerald-700 border-emerald-300
+            {% else %}bg-white text-gray-500 border-gray-200{% endif %}">
+    {{ cat.nombre }}
+  </a>
+  {% endfor %}
+  <a href="?q={{ query }}&abierto=1"
+     class="px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap bg-white text-gray-500 border-gray-200">
+    Abierto ahora
+  </a>
+</div>
+
+{# Layout principal: lista + mapa #}
+<div class="layout-busqueda">
+
+  {# Lista de comercios #}
+  <div class="lista-scroll p-3 flex flex-col gap-3">
+    <p class="text-xs text-gray-400 pt-1">
+      {{ comercios|length }} comercios encontrados · Bogotá
+    </p>
+
+    {% for comercio in comercios %}
+    <div class="bg-white border rounded-xl p-3 cursor-pointer hover:border-emerald-400 transition-colors
+                {% if comercio.destacado %}border-amber-300{% else %}border-gray-200{% endif %}"
+         onclick="centrarMapa({{ forloop.counter0 }})">
+
+      <div class="flex items-start gap-3 mb-2">
+        <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-xl flex-shrink-0">
+          {{ comercio.categoria.icono|default:"🏪" }}
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-semibold text-gray-900">{{ comercio.nombre }}</span>
+            {% if comercio.destacado %}
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Destacado</span>
+            {% elif comercio.esta_abierto %}
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Abierto</span>
+            {% else %}
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Sin horario</span>
+            {% endif %}
+          </div>
+          <p class="text-xs text-gray-400 mt-0.5">{{ comercio.categoria.nombre }}</p>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="text-yellow-400 text-xs">★★★★★</span>
+            <span class="text-xs font-medium text-gray-700">{{ comercio.rating_promedio }}</span>
+            <span class="text-xs text-gray-400">({{ comercio.total_resenas }} reseñas)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs text-gray-400 mb-2">
+        <span>📍 {{ comercio.direccion|truncatechars:35 }}</span>
+        <span>🏙️ {{ comercio.ciudad }}</span>
+      </div>
+
+      <div class="flex gap-2">
+        <a href="/comercio/{{ comercio.slug }}/"
+           class="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-medium">
+          Ver perfil
+        </a>
+        {% if comercio.whatsapp %}
+        <a href="https://wa.me/57{{ comercio.whatsapp }}"
+           target="_blank"
+           class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600">
+          WhatsApp
+        </a>
+        {% elif comercio.telefono %}
+        <a href="tel:{{ comercio.telefono }}"
+           class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600">
+          Llamar
+        </a>
+        {% endif %}
+      </div>
+
+    </div>
+    {% empty %}
+    <div class="text-center py-12 text-gray-400">
+      <p class="text-sm font-medium">No se encontraron comercios</p>
+      {% if query %}
+      <p class="text-xs mt-1">Intenta con otra palabra clave</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {# Mapa Leaflet #}
+  <div id="mapa"></div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const mapa = L.map('mapa').setView([4.7110, -74.0721], 15);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(mapa);
+
+  const comercios = [
+    {% for comercio in comercios %}
+    {
+      nombre: "{{ comercio.nombre|escapejs }}",
+      lat: {{ comercio.latitud|default:"4.7110" }},
+      lng: {{ comercio.longitud|default:"-74.0721" }},
+      rating: {{ comercio.rating_promedio }},
+      slug: "{{ comercio.slug }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  const iconTeal = L.divIcon({
+    className: '',
+    html: '<div style="width:12px;height:12px;background:#1D9E75;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>',
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+  });
+
+  const markers = comercios.map((c) => {
+    return L.marker([c.lat, c.lng], { icon: iconTeal })
+      .addTo(mapa)
+      .bindPopup(`<b>${c.nombre}</b><br>⭐ ${c.rating}`);
+  });
+
+  function centrarMapa(index) {
+    const c = comercios[index];
+    mapa.setView([c.lat, c.lng], 17);
+    markers[index].openPopup();
+  }
+</script>
+{% endblock %}

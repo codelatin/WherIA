@@ -1,0 +1,29 @@
+{
+  "name": "whereia",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+  "dev": "tailwindcss -i ./static/src/input.css -o ./static/dist/output.css --watch",
+  "build": "tailwindcss -i ./static/src/input.css -o ./static/dist/output.css --minify"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.1.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.0",
+    "tailwindcss": "^4.3.0"
+  },
+  "dependencies": {
+    "alpinejs": "^3.15.12",
+    "leaflet": "^1.9.4"
+  }
+}

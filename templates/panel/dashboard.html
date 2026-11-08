@@ -1,0 +1,769 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Panel — WherIA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#68dbae",
+        "primary-dark": "#1D9E75",
+        "background": "#051424",
+        "surface": "#051424",
+        "surface-container": "#0d1c2d",
+        "surface-container-high": "#1c2b3c",
+        "surface-container-highest": "#273647",
+        "on-surface": "#d4e4fa",
+        "on-surface-variant": "#8fa8c4",
+        "outline-variant": "#1e3a5f",
+        "error": "#ff6b6b",
+      },
+      fontFamily: {
+        "display": ["Plus Jakarta Sans"],
+        "body": ["Inter"],
+        "mono": ["Geist"],
+      }
+    }
+  }
+}
+</script>
+
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background-color: #051424;
+    color: #d4e4fa;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Grid bg sutil */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(104,219,174,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(104,219,174,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Glass cards */
+  .glass-card {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .glass-card:hover {
+    border-color: rgba(104,219,174,0.25);
+    box-shadow: 0 0 24px rgba(104,219,174,0.06);
+  }
+  .glass-card-accent {
+    background: rgba(104,219,174,0.06);
+    border: 1px solid rgba(104,219,174,0.18);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Glow */
+  .emerald-glow { box-shadow: 0 0 16px rgba(104,219,174,0.35); }
+  .emerald-glow-sm { box-shadow: 0 0 8px rgba(104,219,174,0.25); }
+
+  /* Sidebar nav */
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 10px;
+    color: #8fa8c4; font-size: 14px; font-weight: 500;
+    transition: all 0.2s ease; cursor: pointer; text-decoration: none;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #d4e4fa; }
+  .nav-item.active {
+    background: rgba(104,219,174,0.1);
+    color: #68dbae;
+    box-shadow: 0 0 12px rgba(104,219,174,0.15);
+  }
+  .nav-item .material-symbols-outlined { font-size: 20px; }
+
+  /* Pulse dot */
+  @keyframes pulse-dot {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(104,219,174,0.6); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(104,219,174,0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(104,219,174,0); }
+  }
+  .dot-pulse { animation: pulse-dot 2s infinite; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(104,219,174,0.15); border-radius: 10px; }
+
+  /* Chart bars */
+  .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
+  .chart-bar-outer { width: 100%; max-width: 36px; background: rgba(255,255,255,0.07); border-radius: 6px 6px 0 0; position: relative; overflow: hidden; }
+  .chart-bar-fill { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(104,219,174,0.35); border-radius: 6px 6px 0 0; transition: background 0.2s; }
+  .chart-bar-outer:hover .chart-bar-fill { background: #68dbae; box-shadow: 0 0 12px rgba(104,219,174,0.5); }
+  .chart-bar-outer.peak .chart-bar-fill { background: #68dbae; box-shadow: 0 0 14px rgba(104,219,174,0.45); }
+  .chart-label { font-size: 11px; color: #8fa8c4; font-family: 'Geist', sans-serif; }
+  .chart-label.peak { color: #68dbae; font-weight: 600; }
+
+  /* Quick action buttons */
+  .quick-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 16px 12px; border-radius: 14px; cursor: pointer;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.2s ease; flex: 1;
+  }
+  .quick-btn:hover { border-color: rgba(104,219,174,0.3); background: rgba(104,219,174,0.06); transform: translateY(-2px); }
+  .quick-btn .material-symbols-outlined { font-size: 22px; color: #68dbae; }
+  .quick-btn span.label { font-size: 12px; color: #8fa8c4; font-family: 'Geist', sans-serif; text-align: center; }
+
+  /* Plan badge */
+  .plan-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    padding: 3px 8px; border-radius: 99px; text-transform: uppercase;
+    font-family: 'Geist', sans-serif;
+  }
+  .plan-premium { background: rgba(186,117,23,0.2); color: #FAC775; border: 1px solid rgba(186,117,23,0.3); }
+  .plan-intermedio { background: rgba(24,95,165,0.2); color: #B5D4F4; border: 1px solid rgba(24,95,165,0.3); }
+  .plan-basico { background: rgba(104,219,174,0.1); color: #68dbae; border: 1px solid rgba(104,219,174,0.2); }
+
+  /* Metric trend */
+  .trend-up { background: rgba(104,219,174,0.1); color: #68dbae; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+  .trend-down { background: rgba(255,107,107,0.1); color: #ff6b6b; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+
+  /* Review card */
+  .review-card {
+    padding: 16px; background: rgba(255,255,255,0.04);
+    border-radius: 14px; border: 1px solid rgba(255,255,255,0.06);
+    transition: border-color 0.2s;
+  }
+  .review-card:hover { border-color: rgba(104,219,174,0.2); }
+
+  /* Toggle */
+  .toggle-input:checked + .toggle-track { background: #1D9E75; }
+  .toggle-input:checked + .toggle-track .toggle-thumb { transform: translateX(20px); }
+  .toggle-track {
+    width: 44px; height: 24px; border-radius: 99px;
+    background: rgba(255,255,255,0.1); position: relative;
+    cursor: pointer; transition: background 0.2s;
+    display: flex; align-items: center; padding: 2px;
+  }
+  .toggle-thumb {
+    width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    transition: transform 0.2s ease; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+
+  /* Upgrade banner */
+  .upgrade-banner {
+    background: linear-gradient(135deg, rgba(186,117,23,0.12), rgba(104,219,174,0.08));
+    border: 1px solid rgba(186,117,23,0.25);
+    border-radius: 14px; padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+
+  /* Progress bar */
+  .progress-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #68dbae; border-radius: 99px; transition: width 1s ease; }
+
+  /* Topbar btn */
+  .topbar-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 10px;
+    border: 1px solid rgba(104,219,174,0.3);
+    color: #68dbae; font-size: 13px; font-weight: 500;
+    font-family: 'Geist', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    background: rgba(104,219,174,0.05);
+  }
+  .topbar-btn:hover { background: rgba(104,219,174,0.12); box-shadow: 0 0 12px rgba(104,219,174,0.2); }
+
+  /* Orb */
+  .orb { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
+</style>
+</head>
+
+<body class="flex min-h-screen grid-bg">
+
+<!-- ═══════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════ -->
+<aside id="sidebar" class="fixed left-0 top-0 h-full w-[240px] z-50 flex flex-col"
+       style="background:rgba(5,20,36,0.92);border-right:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(20px);">
+
+  <!-- Logo -->
+  <div style="padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;background:#1D9E75;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(29,158,117,0.4);">
+        <span class="material-symbols-outlined" style="font-size:18px;color:#fff;">location_on</span>
+      </div>
+      <div>
+        <div style="font-family:'Plus Jakarta Sans';font-size:17px;font-weight:800;color:#68dbae;letter-spacing:-0.3px;">WherIA</div>
+        <div style="font-size:10px;color:#8fa8c4;letter-spacing:0.06em;font-family:'Geist';">LOCAL COMMERCE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav style="padding:12px 10px;flex:1;overflow-y:auto;" class="custom-scrollbar">
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:#4a6580;padding:0 8px;margin-bottom:8px;margin-top:4px;font-family:'Geist';">PRINCIPAL</div>
+    <a href="/panel/" class="nav-item active">
+      <span class="material-symbols-outlined">dashboard</span>Dashboard
+    </a>
+    <a href="/panel/editar/{{ comercio.slug }}/" class="nav-item">
+      <span class="material-symbols-outlined">person</span>Mi perfil
+    </a>
+    <a href="/panel/crear-comercio/" class="nav-item">
+  <span class="material-symbols-outlined">add_business</span>
+  Registrar negocio
+</a>
+    <a href="#" class="nav-item">
+      <span class="material-symbols-outlined">inventory_2</span>Catálogo
+    </a>
+
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:#4a6580;padding:0 8px;margin-bottom:8px;margin-top:16px;font-family:'Geist';">GESTIÓN</div>
+    <a href="#" class="nav-item">
+      <span class="material-symbols-outlined">reviews</span>Reseñas
+      <span style="margin-left:auto;background:rgba(255,107,107,0.15);color:#ff6b6b;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;font-family:'Geist';">2</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="material-symbols-outlined">bar_chart</span>Métricas
+    </a>
+    <a href="#" class="nav-item">
+      <span class="material-symbols-outlined">workspace_premium</span>Suscripción
+    </a>
+    <a href="#" class="nav-item">
+      <span class="material-symbols-outlined">integration_instructions</span>Integraciones
+    </a>
+
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:#4a6580;padding:0 8px;margin-bottom:8px;margin-top:16px;font-family:'Geist';">SOPORTE</div>
+    <a href="#" class="nav-item">
+      <span class="material-symbols-outlined">help_outline</span>Ayuda
+    </a>
+    <a href="#" class="nav-item">
+      <span class="material-symbols-outlined">settings</span>Configuración
+    </a>
+  </nav>
+
+  <!-- User -->
+  <div style="padding:14px 16px;border-top:1px solid rgba(255,255,255,0.06);">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(255,255,255,0.07);margin-bottom:10px;">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(104,219,174,0.15);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-size:14px;font-weight:700;color:#68dbae;flex-shrink:0;">
+        {% if comercio %}{{ comercio.nombre|slice:":2"|upper }}{% else %}PN{% endif %}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:#d4e4fa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          {% if comercio %}{{ comercio.nombre }}{% else %}Pizzería Napoli{% endif %}
+        </div>
+        <span class="plan-badge plan-basico" style="margin-top:3px;display:inline-block;">
+          Plan {% if comercio %}{{ comercio.plan }}{% else %}Básico{% endif %}
+        </span>
+      </div>
+    </div>
+    <a href="/logout/" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;border-radius:10px;color:#8fa8c4;font-size:13px;font-family:'Geist';text-decoration:none;transition:all 0.2s;"
+       onmouseover="this.style.color='#ff6b6b';this.style.background='rgba(255,107,107,0.08)'"
+       onmouseout="this.style.color='#8fa8c4';this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:18px;">logout</span>
+      Cerrar sesión
+    </a>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════
+     MAIN
+════════════════════════════════════════ -->
+<main class="flex-1 flex flex-col" style="margin-left:240px;min-height:100vh;">
+
+  <!-- Topbar -->
+  <header id="topbar" style="position:sticky;top:0;z-index:40;background:rgba(5,20,36,0.88);border-bottom:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(20px);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <h2 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;color:#d4e4fa;">Dashboard</h2>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);"></div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="dot-pulse" style="width:8px;height:8px;background:#68dbae;border-radius:50%;"></div>
+        <span style="font-family:'Geist';font-size:12px;font-weight:600;color:#68dbae;letter-spacing:0.04em;">
+          {% if comercio %}{{ comercio.nombre|upper }}{% else %}PIZZERÍA NAPOLI{% endif %}
+        </span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <!-- Notificaciones -->
+      <div style="position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer;"
+           onmouseover="this.style.borderColor='rgba(104,219,174,0.3)'"
+           onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+        <span class="material-symbols-outlined" style="font-size:20px;color:#8fa8c4;">notifications</span>
+        <div style="position:absolute;top:8px;right:8px;width:7px;height:7px;background:#ff6b6b;border-radius:50%;border:2px solid #051424;"></div>
+      </div>
+      <a href="/comercio/{% if comercio %}{{ comercio.slug }}{% else %}#{% endif %}/" class="topbar-btn">
+        <span class="material-symbols-outlined" style="font-size:16px;">open_in_new</span>
+        Ver perfil público
+      </a>
+      <a href="/panel/editar/{% if comercio %}{{ comercio.slug }}{% else %}#{% endif %}/" class="topbar-btn" style="background:rgba(104,219,174,0.1);">
+        <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
+        Editar perfil
+      </a>
+    </div>
+  </header>
+
+  <!-- Canvas -->
+  <div style="padding:24px 28px;display:flex;flex-direction:column;gap:20px;max-width:1400px;width:100%;">
+
+    <!-- Welcome Banner -->
+    <div id="welcome" class="glass-card-accent" style="border-radius:18px;padding:24px 28px;position:relative;overflow:hidden;">
+      <div class="orb" style="width:300px;height:300px;background:rgba(104,219,174,0.08);right:-80px;top:-80px;"></div>
+      <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+        <div>
+          <div style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;color:#d4e4fa;margin-bottom:6px;">
+            ¡Bienvenido, {% if comercio %}{{ comercio.nombre }}{% else %}Pizzería Napoli{% endif %}! 🍕
+          </div>
+          <div style="font-size:14px;color:#8fa8c4;margin-bottom:12px;">
+            Tu negocio está activo y recibiendo visitas de clientes en
+            {% if comercio %}{{ comercio.ciudad }}{% else %}Bogotá{% endif %}.
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="display:flex;align-items:center;gap:6px;background:rgba(104,219,174,0.12);border:1px solid rgba(104,219,174,0.25);padding:5px 12px;border-radius:99px;">
+              <div class="dot-pulse" style="width:7px;height:7px;background:#68dbae;border-radius:50%;"></div>
+              <span style="font-family:'Geist';font-size:12px;font-weight:600;color:#68dbae;">Activo</span>
+            </div>
+            <div style="font-size:12px;color:#8fa8c4;">
+              Última visita: hace 3 minutos
+            </div>
+          </div>
+        </div>
+        <!-- Quick stats inline -->
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div style="font-family:'Plus Jakarta Sans';font-size:26px;font-weight:800;color:#68dbae;">
+              {% if comercio %}{{ comercio.total_visualizaciones }}{% else %}1,247{% endif %}
+            </div>
+            <div style="font-size:11px;color:#8fa8c4;font-family:'Geist';">Visitas hoy</div>
+          </div>
+          <div style="width:1px;background:rgba(255,255,255,0.08);"></div>
+          <div style="text-align:center;">
+            <div style="font-family:'Plus Jakarta Sans';font-size:26px;font-weight:800;color:#68dbae;">
+              {% if comercio %}{{ comercio.rating_promedio }}{% else %}4.8{% endif %} ★
+            </div>
+            <div style="font-size:11px;color:#8fa8c4;font-family:'Geist';">Rating</div>
+          </div>
+          <div style="width:1px;background:rgba(255,255,255,0.08);"></div>
+          <div style="text-align:center;">
+            <div style="font-family:'Plus Jakarta Sans';font-size:26px;font-weight:800;color:#68dbae;">
+              {% if comercio %}{{ comercio.total_resenas }}{% else %}24{% endif %}
+            </div>
+            <div style="font-size:11px;color:#8fa8c4;font-family:'Geist';">Reseñas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upgrade Banner (solo si plan básico) -->
+    <div id="upgrade-banner" class="upgrade-banner stagger-card">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="material-symbols-outlined" style="font-size:22px;color:#FAC775;">workspace_premium</span>
+        <div>
+          <div style="font-family:'Plus Jakarta Sans';font-size:14px;font-weight:700;color:#FAC775;">Activa el agente IA conversacional</div>
+          <div style="font-size:12px;color:#8fa8c4;margin-top:2px;">Automatiza pedidos y citas con el plan Intermedio. 30 días gratis.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <button onclick="this.parentElement.parentElement.style.display='none'" style="font-size:12px;color:#8fa8c4;background:none;border:none;cursor:pointer;padding:4px 8px;">Ahora no</button>
+        <button style="background:#BA7517;color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'Geist';">
+          Subir de plan →
+        </button>
+      </div>
+    </div>
+
+    <!-- Métricas -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+
+      <div class="glass-card stagger-card" style="border-radius:16px;padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(104,219,174,0.1);border:1px solid rgba(104,219,174,0.2);display:flex;align-items:center;justify-content:center;">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#68dbae;">visibility</span>
+          </div>
+          <span class="trend-up">+12% <span style="font-size:10px;">↑</span></span>
+        </div>
+        <div class="counter-value" data-target="{% if comercio %}{{ comercio.total_visualizaciones }}{% else %}1247{% endif %}"
+             style="font-family:'Plus Jakarta Sans';font-size:30px;font-weight:800;color:#d4e4fa;line-height:1;">0</div>
+        <div style="font-size:12px;color:#8fa8c4;margin-top:4px;font-family:'Geist';">Visualizaciones</div>
+        <div style="margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a6580;margin-bottom:4px;">
+            <span>Meta mensual</span><span>62%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:0%" data-width="62%"></div></div>
+        </div>
+      </div>
+
+      <div class="glass-card stagger-card" style="border-radius:16px;padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(24,95,165,0.15);border:1px solid rgba(24,95,165,0.3);display:flex;align-items:center;justify-content:center;">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#B5D4F4;">reviews</span>
+          </div>
+          <span class="trend-up">+3 nuevas</span>
+        </div>
+        <div class="counter-value" data-target="{% if comercio %}{{ comercio.total_resenas }}{% else %}24{% endif %}"
+             style="font-family:'Plus Jakarta Sans';font-size:30px;font-weight:800;color:#d4e4fa;line-height:1;">0</div>
+        <div style="font-size:12px;color:#8fa8c4;margin-top:4px;font-family:'Geist';">Reseñas</div>
+        <div style="margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a6580;margin-bottom:4px;">
+            <span>Respondidas</span><span>87%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:0%;background:#B5D4F4;" data-width="87%"></div></div>
+        </div>
+      </div>
+
+      <div class="glass-card stagger-card" style="border-radius:16px;padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(186,117,23,0.15);border:1px solid rgba(186,117,23,0.3);display:flex;align-items:center;justify-content:center;">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#FAC775;" font-variation-settings="'FILL' 1">star</span>
+          </div>
+          <div style="display:flex;gap:2px;">
+            {% for i in "12345" %}<span class="material-symbols-outlined" style="font-size:13px;color:#FAC775;" font-variation-settings="'FILL' 1">star</span>{% endfor %}
+          </div>
+        </div>
+        <div style="font-family:'Plus Jakarta Sans';font-size:30px;font-weight:800;color:#d4e4fa;line-height:1;">
+          {% if comercio %}{{ comercio.rating_promedio }}{% else %}4.8{% endif %}
+        </div>
+        <div style="font-size:12px;color:#8fa8c4;margin-top:4px;font-family:'Geist';">Rating promedio</div>
+        <div style="margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a6580;margin-bottom:4px;">
+            <span>Satisfacción</span><span>96%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:0%;background:#FAC775;" data-width="96%"></div></div>
+        </div>
+      </div>
+
+      <div class="glass-card stagger-card" style="border-radius:16px;padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(83,74,183,0.15);border:1px solid rgba(83,74,183,0.3);display:flex;align-items:center;justify-content:center;">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#CECBF6;">call</span>
+          </div>
+          <span class="trend-down">-5% ↓</span>
+        </div>
+        <div class="counter-value" data-target="{% if comercio %}{{ comercio.total_clics_contacto }}{% else %}89{% endif %}"
+             style="font-family:'Plus Jakarta Sans';font-size:30px;font-weight:800;color:#d4e4fa;line-height:1;">0</div>
+        <div style="font-size:12px;color:#8fa8c4;margin-top:4px;font-family:'Geist';">Clics de contacto</div>
+        <div style="margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a6580;margin-bottom:4px;">
+            <span>Conversión</span><span>7.1%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:0%;background:#CECBF6;" data-width="7.1%"></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="stagger-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:18px 20px;">
+      <div style="font-size:12px;font-weight:600;color:#4a6580;letter-spacing:0.08em;font-family:'Geist';margin-bottom:14px;">ACCIONES RÁPIDAS</div>
+      <div style="display:flex;gap:10px;">
+        <div class="quick-btn" onclick="window.location='/panel/editar/{% if comercio %}{{ comercio.slug }}{% else %}#{% endif %}/'">
+          <span class="material-symbols-outlined">edit_location_alt</span>
+          <span class="label">Actualizar dirección</span>
+        </div>
+        <div class="quick-btn">
+          <span class="material-symbols-outlined">local_offer</span>
+          <span class="label">Crear promoción</span>
+        </div>
+        <div class="quick-btn">
+          <span class="material-symbols-outlined">photo_library</span>
+          <span class="label">Subir fotos</span>
+        </div>
+        <div class="quick-btn">
+          <span class="material-symbols-outlined">schedule</span>
+          <span class="label">Cambiar horario</span>
+        </div>
+        <div class="quick-btn">
+          <span class="material-symbols-outlined">share</span>
+          <span class="label">Compartir perfil</span>
+        </div>
+        <div class="quick-btn">
+          <span class="material-symbols-outlined">qr_code_2</span>
+          <span class="label">Ver QR</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actividad + Info -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+
+      <!-- Gráfica actividad -->
+      <div class="glass-card stagger-card" style="border-radius:16px;padding:20px 22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <div style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#d4e4fa;">Actividad reciente</div>
+            <div style="font-size:12px;color:#8fa8c4;margin-top:2px;">Visualizaciones por día</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button style="padding:5px 12px;border-radius:8px;font-size:12px;font-family:'Geist';background:rgba(104,219,174,0.1);color:#68dbae;border:1px solid rgba(104,219,174,0.2);cursor:pointer;">Semana</button>
+            <button style="padding:5px 12px;border-radius:8px;font-size:12px;font-family:'Geist';color:#8fa8c4;border:1px solid rgba(255,255,255,0.07);background:none;cursor:pointer;">Mes</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:8px;height:120px;">
+          <div class="chart-bar-wrap">
+            <div class="chart-bar-outer" style="height:120px;"><div class="chart-bar-fill" style="height:0%" data-height="40%"></div></div>
+            <span class="chart-label">Lun</span>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar-outer" style="height:120px;"><div class="chart-bar-fill" style="height:0%" data-height="65%"></div></div>
+            <span class="chart-label">Mar</span>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar-outer" style="height:120px;"><div class="chart-bar-fill" style="height:0%" data-height="48%"></div></div>
+            <span class="chart-label">Mié</span>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar-outer" style="height:120px;"><div class="chart-bar-fill" style="height:0%" data-height="72%"></div></div>
+            <span class="chart-label">Jue</span>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar-outer peak" style="height:120px;"><div class="chart-bar-fill" style="height:0%" data-height="98%"></div></div>
+            <span class="chart-label peak">Vie ↑</span>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar-outer" style="height:120px;"><div class="chart-bar-fill" style="height:0%" data-height="82%"></div></div>
+            <span class="chart-label">Sáb</span>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar-outer" style="height:120px;"><div class="chart-bar-fill" style="height:0%" data-height="30%"></div></div>
+            <span class="chart-label">Dom</span>
+          </div>
+        </div>
+
+        <!-- Mini insight -->
+        <div style="margin-top:16px;padding:12px 14px;background:rgba(104,219,174,0.06);border-radius:10px;border:1px solid rgba(104,219,174,0.12);display:flex;align-items:center;gap:10px;">
+          <span class="material-symbols-outlined" style="font-size:18px;color:#68dbae;">insights</span>
+          <span style="font-size:12px;color:#8fa8c4;">El <strong style="color:#68dbae;">viernes</strong> es tu día de mayor tráfico. Publica promociones ese día para maximizar contactos.</span>
+        </div>
+      </div>
+
+      <!-- Info negocio -->
+      <div class="glass-card stagger-card" style="border-radius:16px;padding:20px;">
+        <div style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#d4e4fa;margin-bottom:16px;">Información del negocio</div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="material-symbols-outlined" style="font-size:18px;color:#68dbae;flex-shrink:0;">location_on</span>
+            <div>
+              <div style="font-size:10px;color:#4a6580;font-family:'Geist';letter-spacing:0.06em;">DIRECCIÓN</div>
+              <div style="font-size:13px;color:#d4e4fa;">{% if comercio %}{{ comercio.direccion }}, {{ comercio.ciudad }}{% else %}Calle 72 #10-30, Bogotá{% endif %}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="material-symbols-outlined" style="font-size:18px;color:#68dbae;flex-shrink:0;">call</span>
+            <div>
+              <div style="font-size:10px;color:#4a6580;font-family:'Geist';letter-spacing:0.06em;">TELÉFONO</div>
+              <div style="font-size:13px;color:#d4e4fa;">{% if comercio %}{{ comercio.telefono }}{% else %}3001234567{% endif %}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="material-symbols-outlined" style="font-size:18px;color:#68dbae;flex-shrink:0;">schedule</span>
+            <div>
+              <div style="font-size:10px;color:#4a6580;font-family:'Geist';letter-spacing:0.06em;">HORARIO</div>
+              <div style="font-size:13px;color:#d4e4fa;">{% if comercio and comercio.horario_apertura %}{{ comercio.dias_atencion }} · {{ comercio.horario_apertura|time:"g:iA" }}–{{ comercio.horario_cierre|time:"g:iA" }}{% else %}Lun–Vie · 9am–10pm{% endif %}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="material-symbols-outlined" style="font-size:18px;color:#68dbae;flex-shrink:0;">category</span>
+            <div>
+              <div style="font-size:10px;color:#4a6580;font-family:'Geist';letter-spacing:0.06em;">CATEGORÍA</div>
+              <div style="font-size:13px;color:#d4e4fa;">{% if comercio %}{{ comercio.categoria.nombre }}{% else %}Restaurante{% endif %}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toggle estado -->
+        <div style="padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#d4e4fa;">Estado actual</div>
+            <div style="font-size:12px;color:#68dbae;margin-top:2px;" id="estado-label">Abierto ahora</div>
+          </div>
+          <label style="cursor:pointer;" onclick="toggleEstado()">
+            <div class="toggle-track" id="toggle-track">
+              <div class="toggle-thumb" id="toggle-thumb"></div>
+            </div>
+          </label>
+        </div>
+
+        <a href="/panel/editar/{% if comercio %}{{ comercio.slug }}{% else %}#{% endif %}/"
+           style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;border-radius:10px;background:rgba(104,219,174,0.1);border:1px solid rgba(104,219,174,0.2);color:#68dbae;font-size:13px;font-weight:600;font-family:'Geist';text-decoration:none;transition:all 0.2s;"
+           onmouseover="this.style.background='rgba(104,219,174,0.18)'"
+           onmouseout="this.style.background='rgba(104,219,174,0.1)'">
+          <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
+          Editar perfil completo
+        </a>
+      </div>
+    </div>
+
+    <!-- Reseñas recientes -->
+    <div class="glass-card stagger-card" style="border-radius:16px;padding:20px 22px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div>
+          <div style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#d4e4fa;">Reseñas recientes</div>
+          <div style="font-size:12px;color:#8fa8c4;margin-top:2px;">2 reseñas sin responder</div>
+        </div>
+        <a href="#" style="font-size:13px;color:#68dbae;font-family:'Geist';text-decoration:none;">Ver todas →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+
+        {% if resenas %}
+          {% for resena in resenas|slice:":3" %}
+          <div class="review-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(104,219,174,0.12);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-size:13px;font-weight:700;color:#68dbae;flex-shrink:0;">
+                {{ resena.autor.username|slice:":1"|upper }}
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#d4e4fa;">{{ resena.autor.username }}</div>
+                <div style="color:#FAC775;font-size:12px;">{% for i in "12345" %}{% if forloop.counter <= resena.calificacion %}★{% else %}☆{% endif %}{% endfor %}</div>
+              </div>
+              <div style="margin-left:auto;font-size:11px;color:#4a6580;">{{ resena.creado_en|timesince }} ago</div>
+            </div>
+            <div style="font-size:13px;color:#8fa8c4;line-height:1.6;font-style:italic;">"{{ resena.comentario|truncatechars:80 }}"</div>
+            <div style="margin-top:10px;">
+              <button style="font-size:11px;color:#68dbae;background:rgba(104,219,174,0.08);border:1px solid rgba(104,219,174,0.2);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'Geist';">Responder</button>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="review-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(104,219,174,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#68dbae;">M</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#d4e4fa;">María C.</div>
+                <div style="color:#FAC775;font-size:12px;">★★★★★</div>
+              </div>
+              <div style="margin-left:auto;font-size:11px;color:#4a6580;">hace 2 días</div>
+            </div>
+            <div style="font-size:13px;color:#8fa8c4;line-height:1.6;font-style:italic;">"Excelente servicio, muy recomendado. El mejor de la zona sin duda."</div>
+            <div style="margin-top:10px;"><button style="font-size:11px;color:#68dbae;background:rgba(104,219,174,0.08);border:1px solid rgba(104,219,174,0.2);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'Geist';">Responder</button></div>
+          </div>
+          <div class="review-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(24,95,165,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#B5D4F4;">J</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#d4e4fa;">Juan R.</div>
+                <div style="color:#FAC775;font-size:12px;">★★★★☆</div>
+              </div>
+              <div style="margin-left:auto;font-size:11px;color:#4a6580;">hace 5 días</div>
+            </div>
+            <div style="font-size:13px;color:#8fa8c4;line-height:1.6;font-style:italic;">"Muy buena atención. El lugar es agradable y limpio, volvería."</div>
+            <div style="margin-top:10px;"><button style="font-size:11px;color:#68dbae;background:rgba(104,219,174,0.08);border:1px solid rgba(104,219,174,0.2);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'Geist';">Responder</button></div>
+          </div>
+          <div class="review-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(186,117,23,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#FAC775;">L</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#d4e4fa;">Luis T.</div>
+                <div style="color:#FAC775;font-size:12px;">★★★★★</div>
+              </div>
+              <div style="margin-left:auto;font-size:11px;color:#4a6580;">hace 1 semana</div>
+            </div>
+            <div style="font-size:13px;color:#8fa8c4;line-height:1.6;font-style:italic;">"¡Totalmente recomendado! Los detalles del servicio marcan la diferencia."</div>
+            <div style="margin-top:10px;"><button style="font-size:11px;color:#68dbae;background:rgba(104,219,174,0.08);border:1px solid rgba(104,219,174,0.2);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'Geist';">Responder</button></div>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center;padding:16px 0;border-top:1px solid rgba(255,255,255,0.05);">
+      <span style="font-size:12px;color:#4a6580;font-family:'Geist';">
+        <span class="material-symbols-outlined" style="font-size:14px;vertical-align:-2px;">storefront</span>
+        WherIA · Codelatin S.A.S · © 2026
+      </span>
+    </div>
+
+  </div>
+</main>
+
+<!-- GSAP Animations -->
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Sidebar entrance
+  gsap.from('#sidebar', { x: -30, opacity: 0, duration: 0.7, ease: 'power3.out' });
+  gsap.from('#topbar', { y: -20, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.2 });
+  gsap.from('#welcome', { y: 30, opacity: 0, duration: 0.7, ease: 'power3.out', delay: 0.3 });
+  gsap.from('#upgrade-banner', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.4 });
+
+  // Stagger cards
+  gsap.utils.toArray('.stagger-card').forEach((el, i) => {
+    gsap.from(el, {
+      y: 30, opacity: 0, duration: 0.7, ease: 'power3.out',
+      delay: 0.45 + i * 0.08,
+      scrollTrigger: { trigger: el, start: 'top 90%' }
+    });
+  });
+
+  // Counter animation
+  document.querySelectorAll('.counter-value').forEach(el => {
+    const target = parseInt(el.dataset.target) || 0;
+    let count = 0;
+    const duration = 1500;
+    const step = target / (duration / 16);
+    const timer = setTimeout(() => {
+      const interval = setInterval(() => {
+        count = Math.min(count + step, target);
+        el.textContent = Math.floor(count).toLocaleString('es-CO');
+        if (count >= target) clearInterval(interval);
+      }, 16);
+    }, 600);
+  });
+
+  // Progress bars
+  document.querySelectorAll('.progress-fill').forEach(el => {
+    const width = el.dataset.width;
+    setTimeout(() => { el.style.width = width; }, 800);
+  });
+
+  // Chart bars
+  document.querySelectorAll('.chart-bar-fill').forEach((el, i) => {
+    const h = el.dataset.height;
+    gsap.to(el, {
+      height: h, duration: 1.2, ease: 'elastic.out(1, 0.6)', delay: 0.6 + i * 0.08
+    });
+  });
+
+  // Nav items hover
+  document.querySelectorAll('.nav-item:not(.active)').forEach(item => {
+    item.addEventListener('mousedown', () => gsap.to(item, { scale: 0.97, duration: 0.1 }));
+    item.addEventListener('mouseup', () => gsap.to(item, { scale: 1, duration: 0.15 }));
+    item.addEventListener('mouseleave', () => gsap.to(item, { scale: 1, duration: 0.15 }));
+  });
+
+  // Toggle estado
+  let estadoAbierto = true;
+  function toggleEstado() {
+    estadoAbierto = !estadoAbierto;
+    const track = document.getElementById('toggle-track');
+    const label = document.getElementById('estado-label');
+    const thumb = document.getElementById('toggle-thumb');
+    if (estadoAbierto) {
+      track.style.background = '#1D9E75';
+      thumb.style.transform = 'translateX(20px)';
+      label.textContent = 'Abierto ahora';
+      label.style.color = '#68dbae';
+    } else {
+      track.style.background = 'rgba(255,255,255,0.1)';
+      thumb.style.transform = 'translateX(0)';
+      label.textContent = 'Cerrado temporalmente';
+      label.style.color = '#ff6b6b';
+    }
+  }
+  // Estado inicial del toggle
+  document.getElementById('toggle-track').style.background = '#1D9E75';
+  document.getElementById('toggle-thumb').style.transform = 'translateX(20px)';
+</script>
+
+</body>
+</html>

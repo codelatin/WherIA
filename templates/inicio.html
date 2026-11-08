@@ -1,0 +1,705 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WherIA — Descubrimiento local inteligente</title>
+  <link rel="stylesheet" href="{% static 'dist/output.css' %}">
+  <!-- Tipografías de Stitch -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Material Symbols de Stitch -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" rel="stylesheet">
+
+  <style>
+    /* ── Variables ── */
+    :root {
+      --teal:       #1D9E75;
+      --teal-light: #5DCAA5;
+      --teal-dim:   #68dbae;
+      --navy:       #080E1A;
+      --navy-2:     #0D1526;
+      --navy-3:     #111D35;
+      --surface:    #0e141a;
+      --surface-c:  #1a2026;
+      --on-surface: #dde3eb;
+      --on-sv:      #bccac1;
+      --outline-v:  #3d4943;
+    }
+
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--on-surface);
+      overflow-x: hidden;
+    }
+
+    /* ── Grid BG (Stitch) ── */
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* ── Orbs (nuestros) ── */
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); pointer-events: none; z-index: 0;
+    }
+    .orb-1 { width:500px;height:500px;background:rgba(29,158,117,0.12);top:-100px;left:-100px; }
+    .orb-2 { width:400px;height:400px;background:rgba(24,95,165,0.10);top:200px;right:-80px; }
+    .orb-3 { width:300px;height:300px;background:rgba(29,158,117,0.08);bottom:100px;left:40%; }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: fixed; top:0; left:0; right:0; z-index:100;
+      height: 64px; display:flex; align-items:center;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 0 15px rgba(29,158,117,0.25);
+    }
+    .navbar-inner {
+      max-width:1280px; margin:0 auto; padding:0 40px;
+      width:100%; display:flex; align-items:center; justify-content:space-between;
+    }
+    .nav-logo {
+      display:flex; align-items:center; gap:10px; text-decoration:none;
+    }
+    .nav-logo-icon {
+      width:36px;height:36px;background:var(--teal);border-radius:9px;
+      display:flex;align-items:center;justify-content:center;font-size:17px;
+    }
+    .nav-logo-text {
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:20px;font-weight:800;color:var(--teal-dim);letter-spacing:-0.3px;
+    }
+    .nav-links { display:flex;align-items:center;gap:32px; }
+    .nav-link {
+      font-family:'Geist',sans-serif;font-size:14px;font-weight:500;
+      color:var(--on-sv);text-decoration:none;transition:color 0.2s;
+      letter-spacing:0.02em;
+    }
+    .nav-link:hover, .nav-link.active { color:var(--teal-dim); }
+    .nav-link.active { border-bottom:2px solid var(--teal);padding-bottom:2px; }
+    .nav-actions { display:flex;align-items:center;gap:12px; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      font-family:'Plus Jakarta Sans',sans-serif;
+      background:var(--teal);color:#fff;font-weight:700;font-size:14px;
+      padding:10px 22px;border-radius:8px;border:none;cursor:pointer;
+      transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
+      display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+      box-shadow:0 0 12px rgba(29,158,117,0.35);
+    }
+    .btn-primary:hover { background:#16876A;transform:translateY(-1px);box-shadow:0 0 20px rgba(29,158,117,0.5); }
+    .btn-primary:active { transform:scale(0.97); }
+
+    .btn-outline {
+      font-family:'Plus Jakarta Sans',sans-serif;
+      background:rgba(255,255,255,0.05);color:#fff;font-weight:600;font-size:14px;
+      padding:10px 22px;border-radius:8px;
+      border:1px solid rgba(255,255,255,0.12);cursor:pointer;
+      transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+      backdrop-filter:blur(8px);
+    }
+    .btn-outline:hover { border-color:rgba(255,255,255,0.28);background:rgba(255,255,255,0.09); }
+
+    /* ── Glass cards (Stitch) ── */
+    .glass-card {
+      background:rgba(255,255,255,0.05);
+      backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,0.1);
+      position:relative;
+    }
+    .glass-card::before {
+      content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+      background:linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.04));
+      -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+      mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
+    }
+    .glass-teal {
+      background:rgba(29,158,117,0.08);
+      border:1px solid rgba(29,158,117,0.2);
+      backdrop-filter:blur(12px);
+      position:relative;
+    }
+    .glass-teal::before {
+      content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+      background:linear-gradient(135deg,rgba(29,158,117,0.3),rgba(29,158,117,0.06));
+      -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+      mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
+    }
+
+    /* ── Badge pill ── */
+    .badge-pill {
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(29,158,117,0.12);border:1px solid rgba(29,158,117,0.3);
+      color:var(--teal-light);font-family:'Geist',sans-serif;
+      font-size:12px;font-weight:600;letter-spacing:0.05em;
+      padding:5px 14px;border-radius:99px;
+    }
+
+    /* ── Radar pulse (Stitch) ── */
+    .radar-pulse {
+      position:absolute;border-radius:50%;
+      background:rgba(29,158,117,0.08);
+      animation:radar 4s infinite cubic-bezier(0.4,0,0.6,1);
+      left:50%;top:45%;transform:translate(-50%,-50%);
+    }
+    @keyframes radar {
+      0%   { transform:translate(-50%,-50%) scale(0.8);opacity:0.5; }
+      50%  { transform:translate(-50%,-50%) scale(1.3);opacity:0.08; }
+      100% { transform:translate(-50%,-50%) scale(0.8);opacity:0.5; }
+    }
+
+    /* ── Ping rings (nuestros) ── */
+    @keyframes ping-ring {
+      0%   { transform:translate(-50%,-50%) scale(1);opacity:0.6; }
+      100% { transform:translate(-50%,-50%) scale(3.2);opacity:0; }
+    }
+    .ping-ring {
+      position:absolute;top:50%;left:50%;
+      width:18px;height:18px;border:2px solid var(--teal);border-radius:50%;
+      animation:ping-ring 2.2s ease-out infinite;
+    }
+    .ping-ring-2 { animation-delay:0.7s; }
+    .ping-ring-3 { animation-delay:1.4s; }
+
+    /* ── Pulse glow ── */
+    @keyframes pulse-glow {
+      0%,100% { box-shadow:0 0 18px rgba(29,158,117,0.4); }
+      50%      { box-shadow:0 0 40px rgba(29,158,117,0.75); }
+    }
+    .pulse-glow { animation:pulse-glow 3s ease-in-out infinite; }
+
+    /* ── Float ── */
+    @keyframes float-y {
+      0%,100% { transform:translateY(0); }
+      50%      { transform:translateY(-12px); }
+    }
+    .float-anim { animation:float-y 4s ease-in-out infinite; }
+
+    /* ── SVG pin (Stitch) ── */
+    @keyframes pin-float {
+      0%,100% { transform:translateY(0); }
+      50%      { transform:translateY(-6px); }
+    }
+    .pin-svg { animation:pin-float 2s ease-in-out infinite; }
+
+    /* ── Search card mini ── */
+    .search-card {
+      background:rgba(13,21,38,0.92);
+      border:1px solid rgba(29,158,117,0.25);
+      border-radius:12px;backdrop-filter:blur(16px);
+    }
+
+    /* ── Stats ── */
+    .stat-item { padding:0 28px;border-left:1px solid rgba(255,255,255,0.1); }
+    .stat-item:first-child { padding-left:0;border-left:none; }
+    .stat-val {
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:28px;font-weight:800;color:var(--teal-dim);
+    }
+    .stat-label {
+      font-family:'Geist',sans-serif;font-size:11px;font-weight:600;
+      letter-spacing:0.1em;text-transform:uppercase;color:var(--on-sv);margin-top:3px;
+    }
+
+    /* ── Feature cards ── */
+    .feat-icon {
+      width:52px;height:52px;border-radius:14px;
+      background:rgba(29,158,117,0.1);border:1px solid rgba(29,158,117,0.2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:22px;margin-bottom:20px;
+      transition:background 0.3s,color 0.3s;
+    }
+    .feat-card:hover .feat-icon {
+      background:var(--teal);
+    }
+    .feat-card { transition:transform 0.4s ease; }
+    .feat-card:hover { transform:translateY(-6px); }
+
+    /* ── Steps ── */
+    .step-num {
+      width:52px;height:52px;border-radius:50%;
+      background:var(--teal);color:#fff;
+      font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:18px;
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 20px;
+      box-shadow:0 0 18px rgba(29,158,117,0.45);
+    }
+
+    /* ── Emerald glow helper ── */
+    .emerald-glow { box-shadow:0 0 14px rgba(29,158,117,0.4); }
+
+    /* ── GSAP initial state ── */
+    .gsap-hidden { opacity:0; }
+
+    /* ── Footer ── */
+    .footer-link {
+      font-family:'Geist',sans-serif;font-size:12px;font-weight:600;
+      letter-spacing:0.1em;color:var(--on-sv);text-decoration:none;
+      transition:color 0.2s;
+    }
+    .footer-link:hover { color:var(--teal-dim); }
+    .footer-section-title {
+      font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+      color:var(--on-surface);font-size:13px;letter-spacing:0.08em;
+      text-transform:uppercase;margin-bottom:20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-icon">📍</div>
+      <span class="nav-logo-text">WherIA</span>
+    </a>
+    <div class="nav-links">
+      <a href="/busqueda/" class="nav-link active">Explorar</a>
+      <a href="#como-funciona" class="nav-link">Cómo funciona</a>
+      <a href="#negocios" class="nav-link">Para negocios</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/login/" class="nav-link">Ingresar</a>
+      <a href="/registro/" class="btn-primary emerald-glow" style="font-size:13px;padding:9px 20px;">
+        Registrar mi negocio
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="grid-bg" style="min-height:100vh;display:flex;align-items:center;padding-top:64px;position:relative;overflow:hidden;">
+
+  <!-- Orbs (nuestros) -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Radar pulses (Stitch) -->
+  <div class="radar-pulse" style="width:500px;height:500px;"></div>
+  <div class="radar-pulse" style="width:750px;height:750px;animation-delay:1.2s;"></div>
+
+  <div style="max-width:1280px;margin:0 auto;padding:80px 40px;width:100%;position:relative;z-index:1;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;">
+
+      <!-- Copy -->
+      <div>
+        <!-- SVG Pin animado (Stitch) -->
+        <div class="gsap-hidden pin-svg" id="hero-pin" style="margin-bottom:24px;width:72px;height:72px;filter:drop-shadow(0 0 18px rgba(29,158,117,0.55));">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="glow-pin" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+              </filter>
+            </defs>
+            <path d="M50 10 C35 10 23 22 23 37 C23 55 50 85 50 85 C50 85 77 55 77 37 C77 22 65 10 50 10 Z"
+                  fill="#1D9E75" filter="url(#glow-pin)"/>
+            <circle cx="50" cy="37" r="10" fill="#080E1A"/>
+          </svg>
+        </div>
+
+        <div class="badge-pill gsap-hidden" id="hero-badge" style="margin-bottom:22px;">
+          <span style="width:6px;height:6px;background:var(--teal-light);border-radius:50%;display:inline-block;"></span>
+          La plataforma del comercio local
+        </div>
+
+        <h1 class="gsap-hidden" id="hero-h1"
+            style="font-family:'Plus Jakarta Sans',sans-serif;font-size:52px;font-weight:800;
+                   line-height:1.08;letter-spacing:-1.5px;margin-bottom:20px;color:var(--on-surface);">
+          Encuentra todo lo que<br>
+          necesitas, <span style="color:var(--teal-dim);font-style:italic;">cerca de ti</span>
+        </h1>
+
+        <p class="gsap-hidden" id="hero-p"
+           style="font-size:17px;color:var(--on-sv);line-height:1.75;margin-bottom:36px;max-width:460px;opacity:0.85;">
+          Tu centro comercial digital para descubrir los mejores negocios locales en Colombia. La forma más inteligente de conectar con tu ciudad.
+        </p>
+
+        <div class="gsap-hidden" id="hero-btns" style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="/busqueda/" class="btn-primary" style="font-size:15px;padding:14px 32px;">
+            Explorar comercios
+          </a>
+          <a href="/registro/" class="btn-outline" style="font-size:15px;padding:14px 32px;">
+            Registrar mi negocio
+          </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="gsap-hidden" id="hero-stats" style="display:flex;margin-top:48px;">
+          <div class="stat-item">
+            <div class="stat-val">500+</div>
+            <div class="stat-label">Negocios</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">20+</div>
+            <div class="stat-label">Categorías</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">4</div>
+            <div class="stat-label">Ciudades</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">10K+</div>
+            <div class="stat-label">Usuarios</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mockup flotante (nuestro) -->
+      <div class="gsap-hidden float-anim" id="hero-mockup"
+           style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+
+        <!-- Mini mapa con ping rings -->
+        <div style="position:relative;width:350px;height:310px;border-radius:22px;
+                    background:var(--navy-3);border:1px solid rgba(29,158,117,0.18);overflow:hidden;">
+          <!-- Grid interno -->
+          <div style="position:absolute;inset:0;
+                      background-image:linear-gradient(rgba(29,158,117,0.07) 1px,transparent 1px),
+                                       linear-gradient(90deg,rgba(29,158,117,0.07) 1px,transparent 1px);
+                      background-size:28px 28px;"></div>
+
+          <!-- Ping rings -->
+          <div style="position:absolute;top:50%;left:50%;">
+            <div class="ping-ring"></div>
+            <div class="ping-ring ping-ring-2"></div>
+            <div class="ping-ring ping-ring-3"></div>
+            <div class="pulse-glow" style="width:14px;height:14px;background:var(--teal);
+                 border-radius:50%;border:3px solid #fff;
+                 position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;"></div>
+          </div>
+
+          <!-- Pin 1 -->
+          <div style="position:absolute;top:27%;left:20%;">
+            <div style="width:11px;height:11px;background:#185FA5;border-radius:50%;border:2px solid #fff;"></div>
+            <div class="search-card" style="position:absolute;top:-38px;left:15px;
+                 padding:5px 11px;white-space:nowrap;font-size:11px;font-weight:600;color:#fff;">
+              🍕 Pizzería Napoli
+            </div>
+          </div>
+
+          <!-- Pin 2 -->
+          <div style="position:absolute;top:62%;right:20%;">
+            <div style="width:11px;height:11px;background:var(--teal);border-radius:50%;border:2px solid #fff;"></div>
+            <div class="search-card" style="position:absolute;top:-38px;right:15px;
+                 padding:5px 11px;white-space:nowrap;font-size:11px;font-weight:600;color:#fff;">
+              💈 Barbería Style
+            </div>
+          </div>
+
+          <!-- Pin 3 -->
+          <div style="position:absolute;bottom:24%;left:57%;">
+            <div style="width:10px;height:10px;background:#BA7517;border-radius:50%;border:2px solid #fff;"></div>
+          </div>
+        </div>
+
+        <!-- Card comercio (glass-card de Stitch) -->
+        <div class="glass-card" style="width:330px;padding:14px 16px;border-radius:16px;
+                                        display:flex;align-items:center;gap:12px;">
+          <div style="width:46px;height:46px;border-radius:11px;
+                      background:rgba(29,158,117,0.14);border:1px solid rgba(29,158,117,0.22);
+                      display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;">🍕</div>
+          <div style="flex:1;">
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:#fff;">
+              Pizzería Napoli
+            </div>
+            <div style="font-size:11px;color:var(--on-sv);margin-top:2px;">Restaurante · 280m de distancia</div>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:5px;">
+              <span style="color:#f59e0b;font-size:11px;">★★★★★</span>
+              <span style="font-size:11px;font-weight:700;color:#fff;">4.8</span>
+              <span style="font-size:11px;color:rgba(255,255,255,0.3);">(312 reseñas)</span>
+            </div>
+          </div>
+          <a href="/busqueda/" class="btn-primary" style="font-size:11px;padding:7px 13px;flex-shrink:0;">Ver →</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section style="padding:100px 0;background:var(--navy-2);">
+  <div style="max-width:1280px;margin:0 auto;padding:0 40px;">
+
+    <div class="gsap-hidden" id="feat-header" style="text-align:center;margin-bottom:60px;">
+      <div class="badge-pill" style="margin-bottom:16px;">Características</div>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:36px;font-weight:700;
+                 letter-spacing:-0.5px;color:var(--on-surface);margin-bottom:12px;">
+        Descubrimiento inteligente
+      </h2>
+      <div style="width:64px;height:3px;background:var(--teal);border-radius:99px;margin:0 auto;"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+
+      <div class="glass-card feat-card gsap-hidden" style="border-radius:24px;padding:36px;">
+        <div class="feat-icon">
+          <span class="material-symbols-outlined" style="font-size:26px;color:var(--teal-light);">map</span>
+        </div>
+        <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700;
+                   margin-bottom:10px;color:var(--on-surface);">Búsqueda inteligente</h3>
+        <p style="font-size:14px;color:var(--on-sv);line-height:1.75;">
+          Encuentra exactamente lo que buscas con geolocalización avanzada. Los mejores lugares a pocos pasos de ti.
+        </p>
+      </div>
+
+      <div class="glass-teal feat-card gsap-hidden" style="border-radius:24px;padding:36px;">
+        <div class="feat-icon" style="background:rgba(29,158,117,0.18);border-color:rgba(29,158,117,0.35);">
+          <span class="material-symbols-outlined" style="font-size:26px;color:var(--teal-light);">verified</span>
+        </div>
+        <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700;
+                   margin-bottom:10px;color:var(--on-surface);">Reputación verificada</h3>
+        <p style="font-size:14px;color:var(--on-sv);line-height:1.75;">
+          Reseñas reales de usuarios verificados con sistema de ponderación inteligente anti-fraude.
+        </p>
+      </div>
+
+      <div class="glass-card feat-card gsap-hidden" style="border-radius:24px;padding:36px;">
+        <div class="feat-icon">
+          <span class="material-symbols-outlined" style="font-size:26px;color:var(--teal-light);">chat</span>
+        </div>
+        <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700;
+                   margin-bottom:10px;color:var(--on-surface);">Contacto directo</h3>
+        <p style="font-size:14px;color:var(--on-sv);line-height:1.75;">
+          WhatsApp, llamada o chat en un clic. Sin intermediarios ni comisiones por contacto.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section id="como-funciona" style="padding:100px 0;background:var(--navy);">
+  <div style="max-width:1280px;margin:0 auto;padding:0 40px;">
+
+    <div class="gsap-hidden" id="steps-header" style="text-align:center;margin-bottom:64px;">
+      <div class="badge-pill" style="margin-bottom:16px;">Proceso</div>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:36px;font-weight:700;
+                 letter-spacing:-0.5px;color:var(--on-surface);margin-bottom:12px;">
+        Cómo funciona
+      </h2>
+      <div style="width:64px;height:3px;background:var(--teal);border-radius:99px;margin:0 auto;"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:48px;position:relative;">
+
+      <!-- Línea conectora entre pasos -->
+      <div style="position:absolute;top:26px;left:calc(16.66% + 26px);right:calc(16.66% + 26px);
+                  height:2px;background:linear-gradient(90deg,transparent,rgba(29,158,117,0.35),transparent);"></div>
+
+      <div class="gsap-hidden step-card" style="text-align:center;position:relative;z-index:1;">
+        <div class="step-num emerald-glow">1</div>
+        <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700;
+                   margin-bottom:10px;">Busca</h3>
+        <p style="font-size:14px;color:var(--on-sv);line-height:1.75;">
+          Filtra por ubicación, categoría o palabras clave. Tu ciudad al instante.
+        </p>
+      </div>
+
+      <div class="gsap-hidden step-card" style="text-align:center;position:relative;z-index:1;">
+        <div class="step-num emerald-glow">2</div>
+        <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700;
+                   margin-bottom:10px;">Compara</h3>
+        <p style="font-size:14px;color:var(--on-sv);line-height:1.75;">
+          Revisa perfiles, calificaciones verificadas y fotos del negocio.
+        </p>
+      </div>
+
+      <div class="gsap-hidden step-card" style="text-align:center;position:relative;z-index:1;">
+        <div class="step-num emerald-glow">3</div>
+        <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700;
+                   margin-bottom:10px;">Contacta</h3>
+        <p style="font-size:14px;color:var(--on-sv);line-height:1.75;">
+          Habla directamente con el negocio y obtén lo que necesitas en segundos.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="gsap-hidden" id="steps-cta" style="text-align:center;margin-top:56px;">
+      <a href="/busqueda/" class="btn-primary" style="font-size:15px;padding:14px 44px;">
+        Empezar ahora →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA NEGOCIOS -->
+<section id="negocios" style="padding:100px 0;background:var(--navy-2);">
+  <div style="max-width:960px;margin:0 auto;padding:0 40px;">
+    <div class="glass-teal gsap-hidden" id="cta-card" style="border-radius:28px;padding:72px 56px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:20px;">🏪</div>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:36px;font-weight:800;
+                 letter-spacing:-0.5px;margin-bottom:14px;color:var(--on-surface);">
+        ¿Tienes un negocio?
+      </h2>
+      <p style="font-size:16px;color:var(--on-sv);line-height:1.8;max-width:500px;margin:0 auto 36px;opacity:0.85;">
+        Lleva tu comercio al siguiente nivel con visibilidad constante, métricas reales y contacto directo con tus clientes.
+      </p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+        <a href="/registro/" class="btn-primary" style="font-size:15px;padding:14px 40px;">
+          Registrar mi negocio gratis
+        </a>
+        <a href="/busqueda/" class="btn-outline" style="font-size:15px;padding:14px 40px;">
+          Ver la plataforma
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER (Stitch expandido) -->
+<footer style="background:var(--surface);border-top:1px solid rgba(255,255,255,0.06);padding:60px 0 0;">
+  <div style="max-width:1280px;margin:0 auto;padding:0 40px;">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 2fr;gap:40px;margin-bottom:48px;">
+
+      <!-- Columna 1 -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:32px;height:32px;background:var(--teal);border-radius:8px;
+                      display:flex;align-items:center;justify-content:center;font-size:15px;">📍</div>
+          <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:800;color:var(--teal-dim);">WherIA</span>
+        </div>
+        <p style="font-size:14px;color:var(--on-sv);line-height:1.7;margin-bottom:20px;opacity:0.75;max-width:260px;">
+          Llevando el comercio local de Colombia al siguiente nivel digital.
+        </p>
+        <div style="display:flex;gap:12px;">
+          <a href="#" style="color:var(--on-sv);" class="footer-link">
+            <span class="material-symbols-outlined" style="font-size:20px;">public</span>
+          </a>
+          <a href="#" style="color:var(--on-sv);" class="footer-link">
+            <span class="material-symbols-outlined" style="font-size:20px;">groups</span>
+          </a>
+          <a href="#" style="color:var(--on-sv);" class="footer-link">
+            <span class="material-symbols-outlined" style="font-size:20px;">campaign</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Columna 2 -->
+      <div>
+        <div class="footer-section-title">Navegación</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <a href="/busqueda/" class="footer-link">Explorar</a>
+          <a href="#negocios" class="footer-link">Para negocios</a>
+          <a href="#como-funciona" class="footer-link">Cómo funciona</a>
+        </div>
+      </div>
+
+      <!-- Columna 3 -->
+      <div>
+        <div class="footer-section-title">Legal</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <a href="#" class="footer-link">Privacidad</a>
+          <a href="#" class="footer-link">Términos de uso</a>
+          <a href="#" class="footer-link">Cookies</a>
+        </div>
+      </div>
+
+      <!-- Columna 4 -->
+      <div>
+        <div class="footer-section-title">Novedades</div>
+        <p style="font-size:14px;color:var(--on-sv);margin-bottom:14px;opacity:0.75;">
+          Recibe novedades de comercios cerca de ti.
+        </p>
+        <div style="display:flex;gap:8px;">
+          <input type="email" placeholder="Tu email"
+                 style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+                        border-radius:8px;padding:10px 14px;color:var(--on-surface);font-size:13px;outline:none;
+                        transition:border-color 0.2s;"
+                 onfocus="this.style.borderColor='rgba(29,158,117,0.5)'"
+                 onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+          <button class="btn-primary emerald-glow" style="padding:10px 14px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">send</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Copyright -->
+    <div style="border-top:1px solid rgba(255,255,255,0.06);padding:24px 0;text-align:center;">
+      <p style="font-family:'Geist',sans-serif;font-size:12px;font-weight:500;
+                letter-spacing:0.05em;color:var(--on-sv);opacity:0.55;">
+        © 2026 WherIA · Codelatin S.A.S — Todos los derechos reservados
+      </p>
+    </div>
+
+  </div>
+</footer>
+
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Hero timeline
+  const tl = gsap.timeline({ delay: 0.15 });
+  tl
+    .fromTo('#hero-pin',   { opacity:0, y:-20, scale:0.8 }, { opacity:1, y:0, scale:1, duration:0.8, ease:'back.out(1.4)' })
+    .fromTo('#hero-badge', { opacity:0, y:16  }, { opacity:1, y:0, duration:0.6, ease:'power3.out' }, '-=0.3')
+    .fromTo('#hero-h1',    { opacity:0, y:40  }, { opacity:1, y:0, duration:0.9, ease:'power3.out' }, '-=0.3')
+    .fromTo('#hero-p',     { opacity:0, y:28  }, { opacity:1, y:0, duration:0.7, ease:'power3.out' }, '-=0.5')
+    .fromTo('#hero-btns',  { opacity:0, y:20  }, { opacity:1, y:0, duration:0.6, ease:'power3.out' }, '-=0.4')
+    .fromTo('#hero-stats', { opacity:0, y:18  }, { opacity:1, y:0, duration:0.6, ease:'power3.out' }, '-=0.3')
+    .fromTo('#hero-mockup',{ opacity:0, x:60  }, { opacity:1, x:0, duration:1.1, ease:'power3.out' }, '-=1.3');
+
+  // Features
+  gsap.fromTo('#feat-header',
+    { opacity:0, y:40 },
+    { opacity:1, y:0, duration:0.8, ease:'power3.out',
+      scrollTrigger:{ trigger:'#feat-header', start:'top 85%' } }
+  );
+  gsap.utils.toArray('.feat-card').forEach((el, i) => {
+    gsap.fromTo(el,
+      { opacity:0, y:50 },
+      { opacity:1, y:0, duration:0.7, ease:'power3.out', delay:i*0.14,
+        scrollTrigger:{ trigger:el, start:'top 88%' } }
+    );
+  });
+
+  // Steps
+  gsap.fromTo('#steps-header',
+    { opacity:0, y:40 },
+    { opacity:1, y:0, duration:0.8, ease:'power3.out',
+      scrollTrigger:{ trigger:'#steps-header', start:'top 85%' } }
+  );
+  gsap.utils.toArray('.step-card').forEach((el, i) => {
+    gsap.fromTo(el,
+      { opacity:0, y:40 },
+      { opacity:1, y:0, duration:0.7, ease:'power3.out', delay:i*0.18,
+        scrollTrigger:{ trigger:el, start:'top 88%' } }
+    );
+  });
+  gsap.fromTo('#steps-cta',
+    { opacity:0, y:20 },
+    { opacity:1, y:0, duration:0.6, ease:'power3.out',
+      scrollTrigger:{ trigger:'#steps-cta', start:'top 90%' } }
+  );
+
+  // CTA card
+  gsap.fromTo('#cta-card',
+    { opacity:0, y:50, scale:0.97 },
+    { opacity:1, y:0, scale:1, duration:0.9, ease:'power3.out',
+      scrollTrigger:{ trigger:'#cta-card', start:'top 85%' } }
+  );
+</script>
+
+</body>
+</html>
